@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>AI Music Recommendation System</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:linear-gradient(135deg,#1DB954,#191414);
+color:white;
+text-align:center;
+padding:40px;
+}
+
+input{
+padding:12px;
+width:300px;
+border-radius:8px;
+border:none;
+}
+
+button{
+padding:12px 20px;
+background:#1DB954;
+border:none;
+color:white;
+border-radius:8px;
+cursor:pointer;
+}
+
+.song-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,250px);
+gap:20px;
+justify-content:center;
+margin-top:30px;
+}
+
+.card{
+background:white;
+color:black;
+padding:15px;
+border-radius:10px;
+}
+
+img{
+width:200px;
+border-radius:10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>🎵 AI Music Recommendation System</h1>
+
+<form method="POST">
+
+<input list="songs" name="song" placeholder="Search song">
+
+<datalist id="songs">
+
+{% for song in songs %}
+
+<option value="{{song}}">
+
+{% endfor %}
+
+</datalist>
+
+<button>Recommend</button>
+
+</form>
+
+
+<h2>🔥 Trending Songs</h2>
+
+<div class="song-grid">
+
+{% for song in trending %}
+
+<div class="card">
+
+<p>{{song}}</p>
+
+<a href="/favorite/{{song}}">
+<button>❤️ Favorite</button>
+</a>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+
+<h2>🎧 Recommended Songs</h2>
+
+<div class="song-grid">
+
+{% for song in recommendations %}
+
+<div class="card">
+
+<img src="{{song.image}}">
+
+<h3>{{song.song}}</h3>
+
+<p>{{song.artist}}</p>
+
+<audio controls>
+<source src="{{song.preview}}" type="audio/mpeg">
+</audio>
+
+<a href="/favorite/{{song.song}}">
+<button>❤️ Favorite</button>
+</a>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+
+<h2>⭐ Your Favorite Songs</h2>
+
+{% for song in favorites %}
+
+<p>{{song}}</p>
+
+{% endfor %}
+
+</body>
+</html>
