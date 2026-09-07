@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TuneSphere AI - Music Recommendations</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <!-- TOP NAVIGATION BAR -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="/" class="navbar-brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                    </svg>
+                </div>
+                <span>TuneSphere</span>
+                <span class="brand-tag">AI</span>
+            </a>
+
+            <div class="navbar-nav">
+                <a href="/" class="nav-link {% if active_tab != 'playlists' %}active{% endif %}">
+                    Explore
+                </a>
+                <a href="/playlists" class="nav-link">
+                    Playlists
+                </a>
+                <a href="/#favorites" class="nav-link">
+                    Favorites
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTAINER -->
+    <main class="container">
+
+        <!-- HERO & SEARCH SECTION -->
+        <section class="hero-section">
+            <h1 class="hero-title">Discover Music You'll Love</h1>
+            <p class="hero-subtitle">Enter any song or artist to get instant, AI-matched recommendations.</p>
+
+            <div class="search-box-container">
+                <form method="POST" id="search-form" class="search-form">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <input type="text" id="song-search" name="song" class="search-input" value="{{ search_query }}" placeholder="Search a track (e.g. Believer, Shape of You, Starboy)..." autocomplete="off">
+                    <button type="submit" class="search-btn">Recommend</button>
+                </form>
+
+                <!-- Suggestions Dropdown -->
+                <div id="search-suggestions" class="suggestions-dropdown"></div>
+            </div>
+
+            <!-- Quick Suggestions -->
+            <div class="quick-chips">
+                <span class="quick-chips-label">Popular seeds:</span>
+                {% for seed in quick_seeds %}
+                <a href="/?seed={{ seed }}" class="chip {% if search_query == seed %}active{% endif %}">
+                    {{ seed }}
+                </a>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- ACTIVE SEED TRACK BANNER -->
+        {% if seed_song_info %}
+        <div class="seed-banner">
+            <div class="seed-banner-left">
+                <img src="{{ seed_song_info.image }}" alt="{{ seed_song_info.song }}" class="seed-banner-thumb">
+                <div class="seed-banner-meta">
+                    <span class="seed-banner-tag">Current Seed Track</span>
+                    <h2 class="seed-banner-title">{{ seed_song_info.song }}</h2>
+                    <span class="seed-banner-artist">by {{ seed_song_info.artist }} • {{ seed_song_info.genre }}</span>
+                </div>
+            </div>
+
+            <div class="seed-banner-right">
+                <a href="/song/{{ seed_song_info.song }}?artist={{ seed_song_info.artist }}" class="btn-secondary">
+                    View Song Details
+                </a>
+                <a href="/" class="btn-card-subtle" title="Reset search">
+                    Clear
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- RECOMMENDATIONS SECTION -->
+        <section id="recommendations">
+            <div class="section-toolbar">
+                <div>
+                    <h2 class="section-heading">
+                        Recommendations
+                        {% if seed_song_info %}
+                        <span class="section-subtext">similar to "{{ seed_song_info.song }}"</span>
+                        {% endif %}
+                    </h2>
+                </div>
+
+                <div class="toolbar-controls">
+                    <!-- Strategy Selector -->
+                    <select class="clean-select" onchange="location.href=this.value;">
+                        <option value="/?strategy=balanced{% if active_genre %}&genre_filter={{ active_genre }}{% endif %}{% if seed_song_info %}&seed={{ seed_song_info.song }}{% endif %}" {% if active_strategy == 'balanced' %}selected{% endif %}>Strategy: Balanced</option>
+                        <option value="/?strategy=serendipity{% if active_genre %}&genre_filter={{ active_genre }}{% endif %}{% if seed_song_info %}&seed={{ seed_song_info.song }}{% endif %}" {% if active_strategy == 'serendipity' %}selected{% endif %}>Strategy: Discovery</option>
+                        <option value="/?strategy=energy{% if active_genre %}&genre_filter={{ active_genre }}{% endif %}{% if seed_song_info %}&seed={{ seed_song_info.song }}{% endif %}" {% if active_strategy == 'energy' %}selected{% endif %}>Strategy: High Energy</option>
+                        <option value="/?strategy=acoustic{% if active_genre %}&genre_filter={{ active_genre }}{% endif %}{% if seed_song_info %}&seed={{ seed_song_info.song }}{% endif %}" {% if active_strategy == 'acoustic' %}selected{% endif %}>Strategy: Acoustic</option>
+                    </select>
+
+                    <!-- Genre Filter -->
+                    <form method="GET" style="display:inline-block;">
+                        <input type="hidden" name="strategy" value="{{ active_strategy }}">
+                        <input type="hidden" name="limit" value="{{ active_limit }}">
+                        {% if seed_song_info %}
+                        <input type="hidden" name="seed" value="{{ seed_song_info.song }}">
+                        {% endif %}
+                        <select name="genre_filter" class="clean-select" onchange="this.form.submit()">
+                            <option value="">All Genres</option>
+                            {% for g in genres %}
+                            <option value="{{ g }}" {% if active_genre == g %}selected{% endif %}>{{ g }}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </div>
+            </div>
+
+            {% if recommendations %}
+            <div class="cards-grid">
+                {% for track in recommendations %}
+                <div class="card">
+                    <div class="card-cover-wrapper">
+                        <a href="/song/{{ track.song }}?artist={{ track.artist }}">
+                            <img src="{{ track.image }}" alt="{{ track.song }}" class="card-cover" loading="lazy">
+                        </a>
+                        <span class="match-badge">{{ track.confidence }}% Match</span>
+                    </div>
+
+                    <div class="card-content">
+                        <a href="/song/{{ track.song }}?artist={{ track.artist }}" class="card-title" title="{{ track.song }}">
+                            {{ track.song }}
+                        </a>
+                        <div class="card-artist">{{ track.artist }}</div>
+
+                        <div class="card-tags">
+                            <span class="tag-genre">{{ track.genre }}</span>
+                        </div>
+
+                        <div class="card-actions">
+                            <a href="/?seed={{ track.song }}" class="btn-card-reseed" title="Find songs similar to this">
+                                Similar
+                            </a>
+
+                            <a href="/song/{{ track.song }}?artist={{ track.artist }}" class="btn-card-subtle">
+                                Details
+                            </a>
+
+                            {% set is_faved = false %}
+                            {% for f in favorites %}
+                                {% if f.song == track.song %}{% set is_faved = true %}{% endif %}
+                            {% endfor %}
+
+                            {% if is_faved %}
+                            <a href="/remove_favorite/{{ track.song }}" class="btn-icon-fav is-fav" title="Remove from favorites">
+                                <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                            </a>
+                            {% else %}
+                            <a href="/favorite/{{ track.song }}?artist={{ track.artist }}&genre={{ track.genre }}" class="btn-icon-fav" title="Save to favorites">
+                                <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-box">
+                <p>No recommendations found matching your criteria. Try searching a different song!</p>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- EXPLORE BY MOOD -->
+        <section id="moods" style="margin-top: 10px;">
+            <div class="section-toolbar">
+                <h2 class="section-heading">Explore by Mood</h2>
+            </div>
+
+            <div class="mood-grid">
+                <a href="/?mood=happy" class="mood-chip {% if active_mood == 'happy' %}active{% endif %}">
+                    <span class="mood-emoji">☀️</span>
+                    <span class="mood-name">Happy</span>
+                </a>
+                <a href="/?mood=workout" class="mood-chip {% if active_mood == 'workout' %}active{% endif %}">
+                    <span class="mood-emoji">⚡</span>
+                    <span class="mood-name">Workout</span>
+                </a>
+                <a href="/?mood=chill" class="mood-chip {% if active_mood == 'chill' %}active{% endif %}">
+                    <span class="mood-emoji">🍃</span>
+                    <span class="mood-name">Chill</span>
+                </a>
+                <a href="/?mood=party" class="mood-chip {% if active_mood == 'party' %}active{% endif %}">
+                    <span class="mood-emoji">🎉</span>
+                    <span class="mood-name">Party</span>
+                </a>
+                <a href="/?mood=sad" class="mood-chip {% if active_mood == 'sad' %}active{% endif %}">
+                    <span class="mood-emoji">🌧️</span>
+                    <span class="mood-name">Melancholy</span>
+                </a>
+                <a href="/?mood=romantic" class="mood-chip {% if active_mood == 'romantic' %}active{% endif %}">
+                    <span class="mood-emoji">💖</span>
+                    <span class="mood-name">Romantic</span>
+                </a>
+            </div>
+        </section>
+
+        <!-- POPULAR TRACKS FROM CATALOG -->
+        <section id="catalog" style="margin-top: 10px;">
+            <div class="section-toolbar">
+                <h2 class="section-heading">Popular Catalog Tracks</h2>
+            </div>
+
+            <div class="cards-grid">
+                {% for track in trending[:8] %}
+                <div class="card">
+                    <div class="card-cover-wrapper">
+                        <a href="/song/{{ track.song }}?artist={{ track.artist }}">
+                            <img src="{{ track.image }}" alt="{{ track.song }}" class="card-cover" loading="lazy">
+                        </a>
+                    </div>
+
+                    <div class="card-content">
+                        <a href="/song/{{ track.song }}?artist={{ track.artist }}" class="card-title" title="{{ track.song }}">
+                            {{ track.song }}
+                        </a>
+                        <div class="card-artist">{{ track.artist }}</div>
+
+                        <div class="card-tags">
+                            <span class="tag-genre">{{ track.genre }}</span>
+                        </div>
+
+                        <div class="card-actions">
+                            <a href="/?seed={{ track.song }}" class="btn-card-reseed">
+                                Similar
+                            </a>
+
+                            {% set is_faved = false %}
+                            {% for f in favorites %}
+                                {% if f.song == track.song %}{% set is_faved = true %}{% endif %}
+                            {% endfor %}
+
+                            {% if is_faved %}
+                            <a href="/remove_favorite/{{ track.song }}" class="btn-icon-fav is-fav" title="Remove favorite">
+                                <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                            </a>
+                            {% else %}
+                            <a href="/favorite/{{ track.song }}?artist={{ track.artist }}&genre={{ track.genre }}" class="btn-icon-fav" title="Save favorite">
+                                <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- FAVORITES SECTION -->
+        {% if favorites %}
+        <section id="favorites" style="margin-top: 10px;">
+            <div class="section-toolbar">
+                <h2 class="section-heading">Saved Favorites ({{ favorites|length }})</h2>
+            </div>
+
+            <div class="cards-grid">
+                {% for track in favorites %}
+                <div class="card">
+                    <div class="card-cover-wrapper">
+                        <a href="/song/{{ track.song }}?artist={{ track.artist }}">
+                            <img src="{{ track.image }}" alt="{{ track.song }}" class="card-cover" loading="lazy">
+                        </a>
+                    </div>
+
+                    <div class="card-content">
+                        <a href="/song/{{ track.song }}?artist={{ track.artist }}" class="card-title" title="{{ track.song }}">
+                            {{ track.song }}
+                        </a>
+                        <div class="card-artist">{{ track.artist }}</div>
+
+                        <div class="card-tags">
+                            <span class="tag-genre">{{ track.genre }}</span>
+                        </div>
+
+                        <div class="card-actions">
+                            <a href="/?seed={{ track.song }}" class="btn-card-reseed">
+                                Similar
+                            </a>
+
+                            <a href="/remove_favorite/{{ track.song }}" class="btn-icon-fav is-fav" title="Remove favorite">
+                                <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+    </main>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Playlists - TuneSphere AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <!-- TOP NAVIGATION BAR -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="/" class="navbar-brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                    </svg>
+                </div>
+                <span>TuneSphere</span>
+                <span class="brand-tag">AI</span>
+            </a>
+
+            <div class="navbar-nav">
+                <a href="/" class="nav-link">
+                    Explore
+                </a>
+                <a href="/playlists" class="nav-link active">
+                    Playlists
+                </a>
+                <a href="/#favorites" class="nav-link">
+                    Favorites
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTAINER -->
+    <main class="container">
+
+        <div class="section-toolbar" style="margin-bottom: 24px;">
+            <div>
+                <h1 class="section-heading">My Playlists</h1>
+                <span class="section-subtext">Organize and save your favorite AI-recommended tracks</span>
+            </div>
+        </div>
+
+        <!-- CREATE PLAYLIST FORM -->
+        <div class="create-playlist-box">
+            <form method="POST" action="/playlists" class="create-playlist-form">
+                <input type="text" name="name" class="create-playlist-input" placeholder="New playlist name (e.g. Coding Vibes, Chill Beats)..." required autocomplete="off">
+                <button type="submit" class="btn-primary">Create</button>
+            </form>
+        </div>
+
+        <!-- PLAYLISTS LIST -->
+        {% if playlists %}
+        <div class="cards-grid">
+            {% for playlist in playlists %}
+            <div class="card" style="padding: 24px; text-align: center; align-items: center;">
+                <div style="width: 56px; height: 56px; border-radius: var(--radius-md); background: rgba(99, 102, 241, 0.15); color: var(--accent-primary); display: flex; align-items: center; justify-content: center; margin-bottom: 14px;">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+                    </svg>
+                </div>
+
+                <h3 class="card-title" style="font-size: 16px; margin-bottom: 4px;">{{ playlist.name }}</h3>
+                <span style="font-size: 12px; color: var(--text-muted); margin-bottom: 18px;">Playlist Collection</span>
+
+                <div style="display: flex; gap: 8px; width: 100%; justify-content: center;">
+                    <a href="/playlists/{{ playlist.name }}" class="btn-primary" style="flex: 1; justify-content: center; font-size: 12.5px; padding: 6px 12px;">
+                        Open
+                    </a>
+
+                    <form method="POST" action="/playlists/{{ playlist.name }}/delete" onsubmit="return confirm('Delete this playlist?');">
+                        <button type="submit" class="btn-card-subtle" style="color: var(--accent-danger); cursor: pointer; border: none; background: transparent;" title="Delete playlist">
+                            Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-box">
+            <p>You haven't created any playlists yet. Enter a name above to get started!</p>
+        </div>
+        {% endif %}
+
+    </main>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

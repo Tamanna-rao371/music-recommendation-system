@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ song.song }} - TuneSphere AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <!-- TOP NAVIGATION BAR -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="/" class="navbar-brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                    </svg>
+                </div>
+                <span>TuneSphere</span>
+                <span class="brand-tag">AI</span>
+            </a>
+
+            <div class="navbar-nav">
+                <a href="/" class="nav-link">
+                    Explore
+                </a>
+                <a href="/playlists" class="nav-link">
+                    Playlists
+                </a>
+                <a href="/#favorites" class="nav-link">
+                    Favorites
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTAINER -->
+    <main class="container">
+
+        <!-- BACK LINK -->
+        <div style="margin-bottom: 20px;">
+            <a href="/" class="btn-card-subtle" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Back to Explore
+            </a>
+        </div>
+
+        <!-- TRACK HEADER CARD -->
+        <section class="track-header-card">
+            <img src="{{ song.image }}" alt="{{ song.song }}" class="track-cover-lg">
+
+            <div class="track-meta">
+                <h1 class="track-meta-title">{{ song.song }}</h1>
+                <div class="track-meta-artist">by <strong>{{ song.artist }}</strong></div>
+
+                <div class="track-badges">
+                    <span class="track-badge">💿 {{ song.album }}</span>
+                    <span class="track-badge">🏷️ {{ song.genre }}</span>
+                    <span class="track-badge">🔥 Popularity: {{ song.popularity }}/100</span>
+                    <span class="track-badge">⏱️ {{ song.tempo }} BPM</span>
+                </div>
+
+                <div class="track-actions">
+                    <a href="/?seed={{ song.song }}" class="btn-primary">
+                        Find Similar Songs
+                    </a>
+
+                    <!-- Add to playlist dropdown -->
+                    <div class="dropdown-holder">
+                        <button class="btn-secondary action-dropdown-btn">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                            Add to Playlist
+                        </button>
+                        <div class="dropdown-menu">
+                            {% if playlists %}
+                                {% for p in playlists %}
+                                <a href="/playlists/{{ p.name }}/add/{{ song.song }}?artist={{ song.artist }}&genre={{ song.genre }}" class="dropdown-item">
+                                    {{ p.name }}
+                                </a>
+                                {% endfor %}
+                                <a href="/playlists" class="dropdown-item" style="color: var(--text-muted); border-top: 1px solid var(--border-color-subtle);">+ New Playlist</a>
+                            {% else %}
+                                <a href="/playlists" class="dropdown-item" style="color: var(--text-muted);">Create a playlist first</a>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Favorite -->
+                    <a href="/favorite/{{ song.song }}?artist={{ song.artist }}&genre={{ song.genre }}" class="btn-secondary">
+                        ⭐ Favorite
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- AUDIO FEATURE SIGNATURES -->
+        <section class="features-box">
+            <h2 class="features-box-title">Audio Feature Signatures</h2>
+
+            <div class="features-list">
+                <div class="feature-item">
+                    <div class="feature-meta">
+                        <span class="feature-name">Danceability</span>
+                        <span class="feature-value">{{ song.danceability }}%</span>
+                    </div>
+                    <div class="feature-bar-bg">
+                        <div class="feature-bar-fill" style="width: {{ song.danceability }}%;"></div>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-meta">
+                        <span class="feature-name">Energy</span>
+                        <span class="feature-value">{{ song.energy }}%</span>
+                    </div>
+                    <div class="feature-bar-bg">
+                        <div class="feature-bar-fill" style="width: {{ song.energy }}%;"></div>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-meta">
+                        <span class="feature-name">Mood / Valence</span>
+                        <span class="feature-value">{{ song.valence }}%</span>
+                    </div>
+                    <div class="feature-bar-bg">
+                        <div class="feature-bar-fill" style="width: {{ song.valence }}%;"></div>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-meta">
+                        <span class="feature-name">Acousticness</span>
+                        <span class="feature-value">{{ song.acousticness }}%</span>
+                    </div>
+                    <div class="feature-bar-bg">
+                        <div class="feature-bar-fill" style="width: {{ song.acousticness }}%;"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SIMILAR RECOMMENDATIONS -->
+        <section>
+            <div class="section-toolbar">
+                <h2 class="section-heading">Similar Songs</h2>
+            </div>
+
+            {% if recommendations %}
+            <div class="cards-grid">
+                {% for track in recommendations %}
+                <div class="card">
+                    <div class="card-cover-wrapper">
+                        <a href="/song/{{ track.song }}?artist={{ track.artist }}">
+                            <img src="{{ track.image }}" alt="{{ track.song }}" class="card-cover" loading="lazy">
+                        </a>
+                        <span class="match-badge">{{ track.confidence }}% Match</span>
+                    </div>
+
+                    <div class="card-content">
+                        <a href="/song/{{ track.song }}?artist={{ track.artist }}" class="card-title" title="{{ track.song }}">
+                            {{ track.song }}
+                        </a>
+                        <div class="card-artist">{{ track.artist }}</div>
+
+                        <div class="card-tags">
+                            <span class="tag-genre">{{ track.genre }}</span>
+                        </div>
+
+                        <div class="card-actions">
+                            <a href="/?seed={{ track.song }}" class="btn-card-reseed">
+                                Similar
+                            </a>
+
+                            <a href="/song/{{ track.song }}?artist={{ track.artist }}" class="btn-card-subtle">
+                                Details
+                            </a>
+
+                            <a href="/favorite/{{ track.song }}?artist={{ track.artist }}&genre={{ track.genre }}" class="btn-icon-fav" title="Save favorite">
+                                <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-box">
+                <p>No similar tracks available.</p>
+            </div>
+            {% endif %}
+        </section>
+
+    </main>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
