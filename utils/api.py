@@ -109,7 +109,9 @@ def get_artist_image(artist_name):
     # Check cache first
     cache_key = f"artist_img:::{artist_name.lower()}"
     if cache_key in _cache:
-        return _cache[cache_key]
+        cached = _cache[cache_key]
+        if cached.startswith("https://") or not get_spotify_client():
+            return cached
         
     image_url = None
     sp = get_spotify_client()
@@ -135,7 +137,9 @@ def get_song_details(song_name, artist_name="", genre=""):
     # Check cache first
     cache_key = f"{song_name.lower()}:::{artist_name.lower()}"
     if cache_key in _cache:
-        return _cache[cache_key]
+        cached = _cache[cache_key]
+        if cached.get("image", "").startswith("https://") or not get_spotify_client():
+            return cached
         
     details = {
         "song": song_name,
