@@ -1,9 +1,7 @@
 from flask import Flask, render_template, request, session, redirect, url_for, jsonify, Response
 import pandas as pd
 from config import Config
-import database
-import spotify_api
-from recommendation_engine import engine
+from utils import database, spotify_api, engine
 
 app = Flask(__name__)
 app.secret_key = Config.SECRET_KEY

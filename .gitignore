@@ -45,3 +45,4 @@ database.db
 .DS_Store
 Thumbs.db
 *.swp
+.kombai/
